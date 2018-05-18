@@ -1,0 +1,6 @@
+function plot_all_profiles()
+load('C:\Projects\GEOS_CHEM\data\summary_files\profiles.mat');
+
+data = profilesDownsview;
+date_TF = unique(data.UTC);
+
