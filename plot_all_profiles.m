@@ -1,6 +1,7 @@
-function plot_all_profiles()
+function plot_all_profiles(profiles)
 
-data = profilesDownsview;
+%data = profilesDownsview;
+data = profiles;
 timestamps = unique(data.UTC);
 figure;hold all;
 for i = 1:numel(timestamps)

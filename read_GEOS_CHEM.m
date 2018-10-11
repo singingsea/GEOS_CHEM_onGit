@@ -103,11 +103,13 @@ profile.UTC = repmat(datetime(UTC),height(profile),1);
 Aav = 6.02e23;
 R = 8.314;
 DU = 2.69e20;% note here we use al SI units in the following equs
-TF = (profile.Z<=60e3); % just integrate VMR below 60 km.
+TF = (profile.Z<=50e3); % just integrate VMR below 60 km.
 o3_vcd = sum(profile.pressure(TF,:).*100.*profile.O3_vmr(TF,:).*1e-9.*profile.box_height(TF,:).*Aav./(R.*profile.T(TF,:))./DU);
 no2_vcd = sum(profile.pressure(TF,:).*100.*profile.NO2_vmr(TF,:).*1e-9.*profile.box_height(TF,:).*Aav./(R.*profile.T(TF,:))./DU);
 so2_vcd = sum(profile.pressure(TF,:).*100.*profile.SO2_vmr(TF,:).*1e-9.*profile.box_height(TF,:).*Aav./(R.*profile.T(TF,:))./DU);
 hcho_vcd = sum(profile.pressure(TF,:).*100.*profile.HCHO_vmr(TF,:).*1e-9.*profile.box_height(TF,:).*Aav./(R.*profile.T(TF,:))./DU);
+airdensity = profile.pressure.*100.*Aav./(R.*profile.T);
+profile.airdensity = airdensity;
 % o3_vcd = sum(profile.pressure.*100.*profile.O3_vmr.*1e-9.*profile.box_height.*Aav./(R.*profile.T)./DU);
 % no2_vcd = sum(profile.pressure.*100.*profile.NO2_vmr.*1e-9.*profile.box_height.*Aav./(R.*profile.T)./DU);
 % so2_vcd = sum(profile.pressure.*100.*profile.SO2_vmr.*1e-9.*profile.box_height.*Aav./(R.*profile.T)./DU);

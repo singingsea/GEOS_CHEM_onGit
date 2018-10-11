@@ -1,4 +1,4 @@
-function [VCD,profile] =  get_GEOS_CHEM_all()
+function get_GEOS_CHEM_all()
 % this is the "main" function, make sure fill out the folder paths
 % location of interest
 site = 'Downsview';
@@ -17,7 +17,8 @@ elseif strcmp(site,'FortMcKay')
     user_lon=-111.6400;
 end
 
-trace_gas_file_path = 'C:\Projects\GEOS_CHEM\data\nc_ts\2015_test\';
+%trace_gas_file_path = 'C:\Projects\GEOS_CHEM\data\nc_ts\201501\';% this version has almost no spin up!!!
+trace_gas_file_path = 'C:\Projects\GEOS_CHEM\data\nc_ts\01_new_new\';% this version has spin up for 6 month
 support_file_path = 'C:\Projects\GEOS_CHEM\data\support\';
 output_file_path = 'C:\Projects\GEOS_CHEM\data\reformat\';
 list = ls(trace_gas_file_path);
@@ -30,6 +31,7 @@ for i_file = 3:N(1)
     support_file_date = filename(3:10); % get the date stamp from supporting file name
     f_nm_support = [support_file_path 'T_PS_' support_file_date '.nc'];
     f_nm_support_BLH = [support_file_path 'TROP_PBLH_' support_file_date '.nc'];
+    f_nm_airdensity = ['C:\Projects\GEOS_CHEM\data\air_density\' 'AD_' support_file_date '.nc'];
     
     % if these tables are not exist, then we need read them from files for sure
     support_info_missing = ~exist('PS_a_24hr') || ~exist('T_a47_24hr') || ~exist('PBLH_a') || ~exist('TROPPT_a');
@@ -51,6 +53,12 @@ for i_file = 3:N(1)
         %[profile_1hr,VCD_1hr] = read_GEOS_CHEM(f_nm,f_nm_support,f_nm_support_BLH,site);
         [profile_1hr,VCD_1hr] = read_GEOS_CHEM(f_nm,PS_a_24hr,T_a47_24hr,PBLH_a,TROPPT_a,user_lat,user_lon);
         
+        [BXHGHTS_BXHEIGHT_a,BXHGHTS_AIRNUMDE_a] = read_GEOS_CHEM_AirDensity(f_nm_airdensity,user_lat,user_lon);
+        profile_1hr.BXHGHTS_BXHEIGHT_a = BXHGHTS_BXHEIGHT_a';
+        profile_1hr.BXHGHTS_AIRNUMDE_a = BXHGHTS_AIRNUMDE_a';
+        DU = 2.6870e+20;%[molec/m^2]
+        VCD_1hr.o3_test = sum(profile_1hr.BXHGHTS_BXHEIGHT_a.*profile_1hr.BXHGHTS_AIRNUMDE_a.*profile_1hr.O3_vmr*1e-9)/DU;
+        VCD_1hr.no2_test = sum(profile_1hr.BXHGHTS_BXHEIGHT_a.*profile_1hr.BXHGHTS_AIRNUMDE_a.*profile_1hr.NO2_vmr*1e-9)/DU;
         % export data to csv files
         writetable(VCD_1hr,[output_file_path 'VCD_' filename(3:17) '_' site '.csv']);
         writetable(profile_1hr,[output_file_path 'profile_' filename(3:17) '_' site '.csv']);
