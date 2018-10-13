@@ -38,6 +38,9 @@ end
 profiles = sortrows(profiles,'UTC');
 writetable(profiles,[summary_file_output_file_path 'profiles_' site '.csv']);
 
+matfile_nm = [summary_file_output_file_path 'VCDs_Profile_' site '.mat'];
+save(matfile_nm,'profiles','VCDs');
+
 figure;hold all;
 plot(VCDs.UTC,VCDs.o3,'.');
 xlabel('UTC');
