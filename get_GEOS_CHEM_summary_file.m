@@ -6,9 +6,11 @@ function [VCDs,profiles] = get_GEOS_CHEM_summary_file()
 output_file_path = 'E:\Projects\GEOS-Chem\output\';
 summary_file_output_file_path = 'E:\Projects\GEOS-Chem\output\summary_files\';
 
-site = 'Downsview';
+%site = 'Downsview';
 %site = 'Egbert'
 %site = 'FortMcKay'
+%site = 'Beijing'
+site = 'LosAngeles'
 
 
 %list_VCD = ls([output_file_path 'VCD*Downsview*']);

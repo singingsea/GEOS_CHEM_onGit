@@ -8,9 +8,11 @@ function get_GEOS_CHEM_all_v2()
 
 % Xiaoyi --- 2018/10/12
 
-site = 'Downsview';
+%site = 'Downsview';
 %site = 'Egbert'
 %site = 'FortMcKay'
+%site = 'Beijing'
+site = 'LosAngeles'
 
 % default lon/lat information for Pandora site
 if strcmp(site,'Downsview')
@@ -22,6 +24,12 @@ elseif strcmp(site,'Egbert')
 elseif strcmp(site,'FortMcKay')
     user_lat=57.1836;
     user_lon=-111.6400;
+elseif strcmp(site,'Beijing')
+    user_lat=39.9;
+    user_lon=116.4;    
+elseif strcmp(site,'LosAngeles')
+    user_lat=34.03;
+    user_lon=-118.23;    
 end
 
 % %trace_gas_file_path = 'C:\Projects\GEOS_CHEM\data\nc_ts\201501\';% this version has almost no spin up!!!
