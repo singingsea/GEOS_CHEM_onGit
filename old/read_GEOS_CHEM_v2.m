@@ -1,4 +1,4 @@
-function [profile,VCD] = read_GEOS_CHEM_v2(f_nm,user_lat,user_lon)
+function [profile,VCD] = read_GEOS_CHEM_v2(f_nm,user_lat_index,user_lon_index)
 % this function can read GEOS CHEM O3/NO2/SO2/HCHO data
 % this function need inputs from "read_GEOS_CHEM_meteo" and "read_GEOS_CHEM_TROP_PBLH", which will provide
 % supporting data (surface pressure, T profile, BLH, and tropopause
@@ -34,42 +34,48 @@ function [profile,VCD] = read_GEOS_CHEM_v2(f_nm,user_lat,user_lon)
 
 % read in file info and variables
 info = ncinfo(f_nm);
-LON = ncread(f_nm,'LON');
-LAT = ncread(f_nm,'LAT');
+LON = ncread(f_nm,'lon');
+LAT = ncread(f_nm,'lat');
 %Ap = ncread(f_nm,'Ap');
 %Bp = ncread(f_nm,'Bp');
-P = ncread(f_nm,'PEDGE-S__PSURF');
-AIRDEN = ncread(f_nm,'TIME-SER__AIRDEN');%molec/cm^3
-BXHEIGHT = ncread(f_nm,'BXHGHT-S__BXHEIGHT');% box height m
-PBL_M = ncread(f_nm,'PBLDEPTH__PBL-M');% PBL m
-PBL_L = ncread(f_nm,'PBLDEPTH__PBL-L');%PBL level
+P = ncread(f_nm,'PEDGE_S_PSURF');
+AIRDEN = ncread(f_nm,'TIME_SER_AIRDEN');%molec/cm^3
+BXHEIGHT = ncread(f_nm,'BXHGHT_S_BXHEIGHT');% box height m
+PBL_M = ncread(f_nm,'PBLDEPTH_PBL_M');% PBL m
+PBL_L = ncread(f_nm,'PBLDEPTH_PBL_L');%PBL level
 
 % read in trace gas 
-NO2 = ncread(f_nm,'IJ-AVG-S__NO2');
-O3 = ncread(f_nm,'IJ-AVG-S__O3');
-HCHO = ncread(f_nm,'IJ-AVG-S__CH2O');
-SO2 = ncread(f_nm,'IJ-AVG-S__SO2');
+NO2 = ncread(f_nm,'IJ_AVG_S_NO2');
+O3 = ncread(f_nm,'IJ_AVG_S_O3');
+HCHO = ncread(f_nm,'IJ_AVG_S_CH2O');
+SO2 = ncread(f_nm,'IJ_AVG_S_SO2');
+NO = ncread(f_nm,'IJ_AVG_S_NO');
+
+
 
 % check the date format, and then generate a UTC timestamp
-if strcmp(info.Attributes(6).Name,'Start_Date')
-    date = info.Attributes(6).Value;
-    time = info.Attributes(7).Value;
-    if time == 0 
-        UTC = datevec([num2str(date) '/000000'],'yyyymmdd/HHMMSS');
-    else
-        UTC = datevec([num2str(date) '/' num2str(time)],'yyyymmdd/HHMMSS');
-    end
-else
-    disp("Warnning, the format of the nc file info might be different, please check Attributes to locate start time");
-end
-% find the index of the profiles at given location
-[i,j,d_min] = find_profiles_at_location(LON,LAT,user_lat,user_lon);
+% if strcmp(info.Attributes(6).Name,'Start_Date')
+%     date = info.Attributes(6).Value;
+%     time = info.Attributes(7).Value;
+%     if time == 0 
+%         UTC = datevec([num2str(date) '/000000'],'yyyymmdd/HHMMSS');
+%     else
+%         UTC = datevec([num2str(date) '/' num2str(time)],'yyyymmdd/HHMMSS');
+%     end
+% else
+%     disp("Warnning, the format of the nc file info might be different, please check Attributes to locate start time");
+% end
 
-disp(['Find closest grid at: Lon = ' num2str(LON(i)) ' ; Lat = ' num2str(LAT(j))]);
-disp(['Distance from site = ' num2str(d_min/1000) 'km']);
+k = strfind(f_nm,'\ts');
+datetime_str = f_nm(k+3:end-3);
+UTC = datevec([datetime_str '/000000'],'yyyymmdd/HHMMSS');
+
+i = user_lat_index;
+j = user_lon_index;
 % get the profile over the site
 O3_a = O3(i,j,:);% O3 VMR in [ppbv]
 NO2_a = NO2(i,j,:);% NO2 VMR in [ppbv]
+NO_a = NO(i,j,:);% NO VMR in [ppbv]
 SO2_a = SO2(i,j,:);% SO2 VMR in [ppbv]
 HCHO_a = HCHO(i,j,:);% HCHO VMR in [ppbv]
 AIRDEN_a = AIRDEN(i,j,:);% air density 
@@ -82,6 +88,7 @@ P_a = P(i,j,:);
 
 O3_a = reshape(O3_a,[],1);% reshape to simple matrix
 NO2_a = reshape(NO2_a,[],1);
+NO_a = reshape(NO_a,[],1);
 SO2_a = reshape(SO2_a,[],1);
 HCHO_a = reshape(HCHO_a,[],1);
 AIRDEN_a = reshape(AIRDEN_a,[],1);
@@ -114,6 +121,7 @@ profile.airdensity =  AIRDEN_a;
 %profile.T = T;
 profile.O3_vmr = O3_a;
 profile.NO2_vmr = NO2_a;
+profile.NO_vmr = NO_a;
 profile.SO2_vmr = SO2_a;
 profile.HCHO_vmr = HCHO_a;
 %profile.box_height =  box_height';
@@ -126,6 +134,7 @@ DU = 2.69e20;% molec/m^3 note here we use al SI units in the following equs
 
 o3_vcd = sum(profile.airdensity.*1e6.*profile.O3_vmr.*1e-9.*profile.boxheight)/DU;
 no2_vcd = sum(profile.airdensity.*1e6.*profile.NO2_vmr.*1e-9.*profile.boxheight)/DU;
+no_vcd = sum(profile.airdensity.*1e6.*profile.NO_vmr.*1e-9.*profile.boxheight)/DU;
 so2_vcd = sum(profile.airdensity.*1e6.*profile.SO2_vmr.*1e-9.*profile.boxheight)/DU;
 hcho_vcd = sum(profile.airdensity.*1e6.*profile.HCHO_vmr.*1e-9.*profile.boxheight)/DU;
 
@@ -152,11 +161,19 @@ hcho_vcd = sum(profile.airdensity.*1e6.*profile.HCHO_vmr.*1e-9.*profile.boxheigh
 % hcho_vcdtrop = sum(profile.pressure(TF,:).*100.*profile.HCHO_vmr(TF,:).*1e-9.*profile.box_height(TF,:).*Aav./(R.*profile.T(TF,:))./DU);
 
 % calculate VCD_PBL 
-PBL_level = round(PBL_L_a);
-o3_vcd_pbl = sum(profile.airdensity(1:PBL_level).*1e6.*profile.O3_vmr(1:PBL_level).*1e-9.*profile.boxheight(1:PBL_level))/DU;
-no2_vcd_pbl = sum(profile.airdensity(1:PBL_level).*1e6.*profile.NO2_vmr(1:PBL_level).*1e-9.*profile.boxheight(1:PBL_level))/DU;
-so2_vcd_pbl = sum(profile.airdensity(1:PBL_level).*1e6.*profile.SO2_vmr(1:PBL_level).*1e-9.*profile.boxheight(1:PBL_level))/DU;
-hcho_vcd_pbl = sum(profile.airdensity(1:PBL_level).*1e6.*profile.HCHO_vmr(1:PBL_level).*1e-9.*profile.boxheight(1:PBL_level))/DU;
+%PBL_level = round(PBL_L_a);
+PBL_level = fix(PBL_L_a);% this is the integer part of PBL level
+PBL_level_decimal = PBL_L_a - fix(PBL_L_a);% this is the decimal part of PBL level
+o3_vcd_pbl = sum(profile.airdensity(1:PBL_level).*1e6.*profile.O3_vmr(1:PBL_level).*1e-9.*profile.boxheight(1:PBL_level))/DU ...
+    + PBL_level_decimal.*profile.airdensity(PBL_level+1).*1e6.*profile.O3_vmr(PBL_level+1).*1e-9.*profile.boxheight(PBL_level+1)/DU;
+no2_vcd_pbl = sum(profile.airdensity(1:PBL_level).*1e6.*profile.NO2_vmr(1:PBL_level).*1e-9.*profile.boxheight(1:PBL_level))/DU ...
+    + PBL_level_decimal.*profile.airdensity(PBL_level+1).*1e6.*profile.NO2_vmr(PBL_level+1).*1e-9.*profile.boxheight(PBL_level+1)/DU;
+no_vcd_pbl = sum(profile.airdensity(1:PBL_level).*1e6.*profile.NO_vmr(1:PBL_level).*1e-9.*profile.boxheight(1:PBL_level))/DU ...
+    + PBL_level_decimal.*profile.airdensity(PBL_level+1).*1e6.*profile.NO_vmr(PBL_level+1).*1e-9.*profile.boxheight(PBL_level+1)/DU;
+so2_vcd_pbl = sum(profile.airdensity(1:PBL_level).*1e6.*profile.SO2_vmr(1:PBL_level).*1e-9.*profile.boxheight(1:PBL_level))/DU ...
+    + PBL_level_decimal.*profile.airdensity(PBL_level+1).*1e6.*profile.SO2_vmr(PBL_level+1).*1e-9.*profile.boxheight(PBL_level+1)/DU;
+hcho_vcd_pbl = sum(profile.airdensity(1:PBL_level).*1e6.*profile.HCHO_vmr(1:PBL_level).*1e-9.*profile.boxheight(1:PBL_level))/DU ...
+    + PBL_level_decimal.*profile.airdensity(PBL_level+1).*1e6.*profile.HCHO_vmr(PBL_level+1).*1e-9.*profile.boxheight(PBL_level+1)/DU;
 
 % % calculate VCDstart
 % o3_vcdstart = o3_vcd - o3_vcdtrop;
@@ -168,6 +185,7 @@ VCD = table;
 VCD.UTC = datetime(UTC);
 VCD.o3 = o3_vcd;% all VCDs are in DU
 VCD.no2 = no2_vcd;
+VCD.no = no_vcd;
 VCD.so2 = so2_vcd;
 VCD.hcho = hcho_vcd;
 VCD.PBLH = PBL_M_a;% boundary layer height [m]
@@ -176,16 +194,19 @@ VCD.PBLH = PBL_M_a;% boundary layer height [m]
 
 VCD.o3_pbl = o3_vcd_pbl;% all tropospheric columns are in DU
 VCD.no2_pbl = no2_vcd_pbl;
+VCD.no_pbl = no_vcd_pbl;
 VCD.so2_pbl = so2_vcd_pbl;
 VCD.hcho_pbl = hcho_vcd_pbl;
 
 VCD.o3_surf = profile.O3_vmr(1);% all tropospheric columns are in DU
 VCD.no2_surf = profile.NO2_vmr(1);
+VCD.no_surf = profile.NO_vmr(1);
 VCD.so2_surf = profile.SO2_vmr(1);
 VCD.hcho_surf = profile.HCHO_vmr(1);
 
 VCD.o3_CV = VCD.o3_surf./VCD.o3_pbl;
 VCD.no2_CV = VCD.no2_surf./VCD.no2_pbl;
+VCD.no_CV = VCD.no_surf./VCD.no_pbl;
 VCD.so2_CV = VCD.so2_surf./VCD.so2_pbl;
 VCD.hcho_CV = VCD.hcho_surf./VCD.hcho_pbl;
 
@@ -202,41 +223,7 @@ VCD.hcho_CV = VCD.hcho_surf./VCD.hcho_pbl;
 
 
 %%
-function [i_min,j_min,d_min] = find_profiles_at_location(LON,LAT,user_lat,user_lon)
-% find the cloest profile for the site, output the index for lon and lat
-LON_dim = size(LON);
-LAT_dim = size(LAT);
-start_searching = true;
-for i=1:LON_dim(1)% dim of lon
-    for j=1:LAT_dim(1)% dim of lat
-        d = get_distance(user_lat,user_lon,LAT(j),LON(i));
-        if start_searching == true
-            d_min = d;
-            i_min = i;
-            j_min = j;
-            start_searching = false;
-        else
-            if (d_min > d)
-                d_min = d;
-                i_min = i;
-                j_min = j;
-            else
-            end
-        end                
-    end
-end
 
-%%
-function d = get_distance(user_lat,user_lon,lat,lon)
-% sub function to calculate distance
-R=6371000;%radius of the earth in meters
-lat1=degtorad(user_lat);
-lat2=degtorad(lat);
-delta_lat=degtorad(lat-user_lat);
-delta_lon=degtorad(lon-user_lon);
-a=(sin(delta_lat/2))*(sin(delta_lat/2))+(cos(lat1))*(cos(lat2))*(sin(delta_lon/2))*(sin(delta_lon/2));
-c=2.*asin(sqrt(a));
-d=R*c;
 
 
 

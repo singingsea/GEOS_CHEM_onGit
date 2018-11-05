@@ -8,11 +8,12 @@ function get_GEOS_CHEM_all_v2()
 
 % Xiaoyi --- 2018/10/12
 
-%site = 'Downsview';
+site = 'Downsview';
 %site = 'Egbert'
 %site = 'FortMcKay'
 %site = 'Beijing'
-site = 'LosAngeles'
+%site = 'LosAngeles'
+
 
 % default lon/lat information for Pandora site
 if strcmp(site,'Downsview')
@@ -32,12 +33,15 @@ elseif strcmp(site,'LosAngeles')
     user_lon=-118.23;    
 end
 
-% %trace_gas_file_path = 'C:\Projects\GEOS_CHEM\data\nc_ts\201501\';% this version has almost no spin up!!!
-% trace_gas_file_path = 'C:\Projects\GEOS_CHEM\data\nc_ts\01_new_new\';% this version has spin up for 6 month
-% support_file_path = 'C:\Projects\GEOS_CHEM\data\support\';
-data_file_path = 'E:\Projects\GEOS-Chem\data\GEOS-CHEM\';
-%output_file_path = 'C:\Projects\GEOS_CHEM\data\reformat\';
-output_file_path = 'E:\Projects\GEOS-Chem\output\';
+general_data_file_path = 'C:\Projects\GEOS_CHEM\data\2014\';
+month_list = ls(general_data_file_path);
+output_file_path = 'C:\Projects\GEOS_CHEM\output\';
+
+for i_month = 1:12
+    data_file_path = [general_data_file_path month_list(i_month+3,:) '\'];
+    
+
+
 list = ls(data_file_path);
 N = size(list);
 for i_file = 3:N(1)
@@ -67,8 +71,19 @@ for i_file = 3:N(1)
 %     end
     
     try
+        if i_file == 3
+            %LON = ncread(f_nm,'LON');
+            LON = ncread(f_nm,'lon');
+            %LAT = ncread(f_nm,'LAT');
+            LAT = ncread(f_nm,'lat');
+            % find the index of the profiles at given location
+            [user_lat_index,user_lon_index,d_min] = find_profiles_at_location(LON,LAT,user_lat,user_lon);
+        end
+        disp(['Find closest grid at: Lon = ' num2str(LON(user_lat_index)) ' ; Lat = ' num2str(LAT(user_lon_index))]);
+        disp(['Distance from site = ' num2str(d_min/1000) 'km']);
+        
         %[profile_1hr,VCD_1hr] = read_GEOS_CHEM(f_nm,f_nm_support,f_nm_support_BLH,site);
-        [profile_1hr,VCD_1hr] = read_GEOS_CHEM_v2(f_nm,user_lat,user_lon);
+        [profile_1hr,VCD_1hr] = read_GEOS_CHEM_v2(f_nm,user_lat_index,user_lon_index);
         
 %         %[BXHGHTS_BXHEIGHT_a,BXHGHTS_AIRNUMDE_a] = read_GEOS_CHEM_AirDensity(f_nm_airdensity,user_lat,user_lon);
 %         profile_1hr.BXHGHTS_BXHEIGHT_a = BXHGHTS_BXHEIGHT_a';
@@ -77,11 +92,50 @@ for i_file = 3:N(1)
 %         VCD_1hr.o3_test = sum(profile_1hr.BXHGHTS_BXHEIGHT_a.*profile_1hr.BXHGHTS_AIRNUMDE_a.*profile_1hr.O3_vmr*1e-9)/DU;
 %         VCD_1hr.no2_test = sum(profile_1hr.BXHGHTS_BXHEIGHT_a.*profile_1hr.BXHGHTS_AIRNUMDE_a.*profile_1hr.NO2_vmr*1e-9)/DU;
         % export data to csv files
-        writetable(VCD_1hr,[output_file_path 'VCD_' filename(3:17) '_' site '.csv']);
-        writetable(profile_1hr,[output_file_path 'profile_' filename(3:17) '_' site '.csv']);
+        %writetable(VCD_1hr,[output_file_path 'VCD_' filename(3:17) '_' site '.csv']);
+        %writetable(profile_1hr,[output_file_path 'profile_' filename(3:17) '_' site '.csv']);
+        k = strfind(f_nm,'\ts');
+        writetable(VCD_1hr,[output_file_path 'VCD_' f_nm(k+3:end-3) '_' site '.csv']);
+        writetable(profile_1hr,[output_file_path 'profile_' f_nm(k+3:end-3) '_' site '.csv']);
     catch
         disp(['Warnning: failed to extracting file from ' filename]);
     end
     
 end
+
+function [i_min,j_min,d_min] = find_profiles_at_location(LON,LAT,user_lat,user_lon)
+% find the cloest profile for the site, output the index for lon and lat
+LON_dim = size(LON);
+LAT_dim = size(LAT);
+start_searching = true;
+for i=1:LON_dim(1)% dim of lon
+    for j=1:LAT_dim(1)% dim of lat
+        d = get_distance(user_lat,user_lon,LAT(j),LON(i));
+        if start_searching == true
+            d_min = d;
+            i_min = i;
+            j_min = j;
+            start_searching = false;
+        else
+            if (d_min > d)
+                d_min = d;
+                i_min = i;
+                j_min = j;
+            else
+            end
+        end                
+    end
+end
+
+%%
+function d = get_distance(user_lat,user_lon,lat,lon)
+% sub function to calculate distance
+R=6371000;%radius of the earth in meters
+lat1=degtorad(user_lat);
+lat2=degtorad(lat);
+delta_lat=degtorad(lat-user_lat);
+delta_lon=degtorad(lon-user_lon);
+a=(sin(delta_lat/2))*(sin(delta_lat/2))+(cos(lat1))*(cos(lat2))*(sin(delta_lon/2))*(sin(delta_lon/2));
+c=2.*asin(sqrt(a));
+d=R*c;
 
