@@ -1,5 +1,8 @@
 function monthly_table = get_GEOS_CHEM_LUT()
 % calculate LUT from GEOS-CHEM summary file
+use_time_window = true;
+start_time = '2015-01-01';
+end_time = '2018-01-01';
 
 site = 'Downsview';timezone_offset = -5;
 %site = 'Egbert';timezone_offset = -5;
@@ -23,8 +26,13 @@ matfile_nm = [summary_file_output_file_path 'VCDs_Profile_' site '.mat'];
 load(matfile_nm);
 
 
-%%
+%% filter by time window
+if use_time_window == true
+    TF_time = (VCDs.UTC >= datetime(start_time)) & (VCDs.UTC <= datetime(end_time));
+    VCDs(~TF_time,:) = [];
+end
 
+%%
 
 monthly_table = table;
 j=1;

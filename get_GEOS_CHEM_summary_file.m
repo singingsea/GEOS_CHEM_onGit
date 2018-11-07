@@ -1,31 +1,36 @@
 function [VCDs,profiles] = get_GEOS_CHEM_summary_file()
 % after running "get_GEOS_CHEM_all", one can use this function to combine
 % outputs into single file
-if ispc
-    addpath('C:\Users\ZhaoX\Documents\MATLAB\matlab');
-    output_file_path = 'C:\Projects\GEOS_CHEM\output\temp\';
-    summary_file_output_file_path = 'C:\Projects\GEOS_CHEM\output\summary_files\';
-else
-    addpath('/export/data/home/xizhao/matlab/');
-    output_file_path = '/export/data/home/xizhao/GEOS_CHEM/output/temp/';
-    summary_file_output_file_path = '/export/data/home/xizhao/GEOS_CHEM/output/summary_files/';
-end
-mkdir(summary_file_output_file_path);
 
 %site = 'Downsview';
 %site = 'Egbert'
 site = 'FortMcKay'
 %site = 'Beijing'
 %site = 'LosAngeles'
-plot_path = ['C:\Projects\GEOS_CHEM\plots\' site '\'];
+
+if ispc
+    addpath('C:\Users\ZhaoX\Documents\MATLAB\matlab');
+    output_file_path = 'C:\Projects\GEOS_CHEM\output\temp\';
+    summary_file_output_file_path = 'C:\Projects\GEOS_CHEM\output\summary_files\';
+    plot_path = ['C:\Projects\GEOS_CHEM\plots\' site '\'];
+else
+    addpath('/export/data/home/xizhao/matlab/');
+    output_file_path = '/export/data/home/xizhao/GEOS_CHEM/output/temp/';
+    summary_file_output_file_path = '/export/data/home/xizhao/GEOS_CHEM/output/summary_files/';
+    plot_path = ['/export/data/home/xizhao/GEOS_CHEM/plots/' site '/'];
+end
+mkdir(summary_file_output_file_path);
+mkdir(plot_path);
+
 save_fig = 1;
 
 
 %list_VCD = ls([output_file_path 'VCD*Downsview*']);
-list_VCD = ls([output_file_path 'VCD*' site '*']);
+list_VCD = dir([output_file_path 'VCD*' site '*']);
+
 N = size(list_VCD);
 for i = 1:N(1)
-    VCD = readtable([output_file_path list_VCD(i,:)]);
+    VCD = readtable([output_file_path list_VCD(i).name]);
     if i == 1
         VCDs = VCD;
     else
@@ -37,10 +42,10 @@ end
 VCDs = sortrows(VCDs,'UTC');
 writetable(VCDs,[summary_file_output_file_path 'VCD_' site '.csv']);
 
-list_profile = ls([output_file_path 'profile*' site '*']);
+list_profile = dir([output_file_path 'profile*' site '*']);
 N = size(list_profile);
 for i = 1:N(1)
-    profile = readtable([output_file_path list_profile(i,:)]);
+    profile = readtable([output_file_path list_profile(i).name]);
     if i == 1
         profiles = profile;
     else

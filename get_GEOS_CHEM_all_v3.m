@@ -10,12 +10,13 @@ function get_GEOS_CHEM_all_v3()
 
 % Xiaoyi --- 2018/11/05
 
-year = '2014';
+year = '2016';
 %site = 'Downsview';
 %site = 'Egbert'
 site = 'FortMcKay';
 %site = 'Beijing'
 %site = 'LosAngeles'
+
 
 % default lon/lat information for Pandora site
 if strcmp(site,'Downsview')
@@ -34,7 +35,6 @@ elseif strcmp(site,'LosAngeles')
     user_lat=34.03;
     user_lon=-118.23;    
 end
-
 
 if ispc
     general_data_file_path = ['C:\Projects\GEOS_CHEM\data\' year '\'];
