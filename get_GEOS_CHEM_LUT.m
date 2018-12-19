@@ -1,4 +1,5 @@
 function monthly_table = get_GEOS_CHEM_LUT()
+DU = 2.6870e+16;
 % calculate LUT from GEOS-CHEM summary file
 use_time_window = true;
 start_time = '2015-01-01';
@@ -51,10 +52,10 @@ for month = 1:12
         
         monthly_table.month(j,:) = month;
         monthly_table.hour(j,:) = hour;
-        monthly_table.ratio(j,:) = mean(data.ratio);
-        monthly_table.ratio_std(j,:) = std(data.ratio);
+        monthly_table.ratio(j,:) = mean(data.ratio./DU);
+        monthly_table.ratio_std(j,:) = std(data.ratio./DU);
         N = height(data);
-        monthly_table.ratio_err(j,:) = std(data.ratio)/(N)^0.5;
+        monthly_table.ratio_err(j,:) = std(data.ratio./DU)/(N)^0.5;
         j=j+1;
     end
 end
