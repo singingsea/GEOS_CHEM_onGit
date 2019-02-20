@@ -1,4 +1,4 @@
-function get_GEOS_CHEM_all_v3()
+function get_GEOS_CHEM_all_v4()
 % this is the "main" function, make sure fill out the folder paths
 % location of interest
 % this 3rd version read in Tailong's latest data, which has air density and
@@ -10,7 +10,7 @@ function get_GEOS_CHEM_all_v3()
 
 % Xiaoyi --- 2018/11/05
 
-year = '2016';
+year = '2014';
 site = 'Downsview';
 %site = 'Egbert'
 %site = 'FortMcKay';
@@ -37,10 +37,7 @@ elseif strcmp(site,'LosAngeles')
 end
 
 if ispc
-    general_data_file_path = ['C:\Projects\GEOS_CHEM\data\' year '\'];
-    
-    %month_list = ls(general_data_file_path);% this only works for Windows! 
-    month_list = dir(general_data_file_path);% this works for both Windows and UNIX! 
+    general_data_file_path = ['C:\Projects\GEOS_CHEM\data\GEOSFP_2x25_47L_V12\'];
     output_file_path = 'C:\Projects\GEOS_CHEM\output\temp\';
     mkdir(output_file_path);
 else
@@ -52,44 +49,39 @@ else
 end
 
 
-for i_month = 1:12
-    % get datapath for a single month
-    if ispc
-        %data_file_path = [general_data_file_path month_list(i_month+2,:) '\'];% this only works for Windows! 
-        data_file_path = [general_data_file_path month_list(i_month+2).name '\'];% this works for both Windows and UNIX! 
-    else
-        data_file_path = [general_data_file_path month_list(i_month+2).name '/'];% this works for both Windows and UNIX! 
-    end
-    % get list of files in that month
-    %list = ls(data_file_path);% this only works for Windows! 
-    list = dir(data_file_path);% this works for both Windows and UNIX! 
-    N = size(list);
-    for i_file = 3:N(1)
-        %filename = list(i_file,:);% this only works for Windows! 
-        filename = list(i_file).name;% this works for both Windows and UNIX! 
-        p_finished = ((i_file-2)/N(1))*100;
-        disp(['Extracting file: ' filename ' @' site '  --' num2str(p_finished) '%-- ']);
-        f_nm = [data_file_path filename];
 
-
-        if i_file == 3
-            LON = ncread(f_nm,'lon');
-            LAT = ncread(f_nm,'lat');
-            % find the index of the profiles at given location
-            [user_lon_index,user_lat_index,d_min] = find_profiles_at_location(LON,LAT,user_lat,user_lon);
-        end
-        disp(['Find closest grid at: Lon = ' num2str(LON(user_lon_index)) ' ; Lat = ' num2str(LAT(user_lat_index))]);
-        disp(['Distance from site = ' num2str(d_min/1000) 'km']);
-
-        % read profiles and VCDs for a whole day
-        [profiles_1day,VCDs_1day] = read_GEOS_CHEM_v4(f_nm,user_lat_index,user_lon_index,output_file_path,site);
-
-
-    end
-    
-        
-    
+if ispc
+    data_file_path = [general_data_file_path 'chem\'];
+    met_file_path = [general_data_file_path 'met\'];
+else
+    data_file_path = [general_data_file_path month_list(i_month+2).name '/'];% this works for both Windows and UNIX! 
 end
+% get list of files in that month
+%list = ls(data_file_path);% this only works for Windows! 
+list = dir(data_file_path);% this works for both Windows and UNIX! 
+N = size(list);
+for i_file = 3:N(1)
+    %filename = list(i_file,:);% this only works for Windows! 
+    filename = list(i_file).name;% this works for both Windows and UNIX! 
+    p_finished = ((i_file-2)/N(1))*100;
+    disp(['Extracting file: ' filename ' @' site '  --' num2str(p_finished) '%-- ']);
+    f_nm = [data_file_path filename];
+
+    if i_file == 3
+        LON = ncread(f_nm,'lon');
+        LAT = ncread(f_nm,'lat');
+        % find the index of the profiles at given location
+        [user_lon_index,user_lat_index,d_min] = find_profiles_at_location(LON,LAT,user_lat,user_lon);
+    end
+    disp(['Find closest grid at: Lon = ' num2str(LON(user_lon_index)) ' ; Lat = ' num2str(LAT(user_lat_index))]);
+    disp(['Distance from site = ' num2str(d_min/1000) 'km']);
+
+    % read profiles and VCDs for a whole day
+    [profiles_1day,VCDs_1day] = read_GEOS_CHEM_v5(f_nm,met_file_path,user_lat_index,user_lon_index,output_file_path,site);
+
+
+end
+
 
 
 

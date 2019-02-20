@@ -2,9 +2,9 @@ function [VCDs,profiles] = get_GEOS_CHEM_summary_file()
 % after running "get_GEOS_CHEM_all", one can use this function to combine
 % outputs into single file
 
-%site = 'Downsview';
+site = 'Downsview';
 %site = 'Egbert'
-site = 'FortMcKay'
+%site = 'FortMcKay'
 %site = 'Beijing'
 %site = 'LosAngeles'
 
