@@ -10,9 +10,9 @@ site = 'Downsview';
 
 if ispc
     addpath('C:\Users\ZhaoX\Documents\MATLAB\matlab');
-    output_file_path = 'C:\Projects\GEOS_CHEM\output\temp\';
-    summary_file_output_file_path = 'C:\Projects\GEOS_CHEM\output\summary_files\';
-    plot_path = ['C:\Projects\GEOS_CHEM\plots\' site '\'];
+    output_file_path = 'C:\Projects\GEOS_CHEM\output\temp\MERRA2_05x0625_47L_NA_V12\';
+    summary_file_output_file_path = 'C:\Projects\GEOS_CHEM\output\summary_files\MERRA2_05x0625_47L_NA_V12\';
+    plot_path = ['C:\Projects\GEOS_CHEM\plots\' site '\MERRA2_05x0625_47L_NA_V12\'];
 else
     addpath('/export/data/home/xizhao/matlab/');
     output_file_path = '/export/data/home/xizhao/GEOS_CHEM/output/temp/';

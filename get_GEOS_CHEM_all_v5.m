@@ -1,16 +1,17 @@
-function get_GEOS_CHEM_all_v4()
+function get_GEOS_CHEM_all_v5()
 % this is the "main" function, make sure fill out the folder paths
 % location of interest
 % this 3rd version read in Tailong's latest data, which has air density and
 % box-height info integarted. 
 % To create convertion LUT, please follow the steps:
-% 1.run this functionL: get_GEOS_CHEM_all_v3()
+% 1.run this function: get_GEOS_CHEM_all_v5()
 % 2. run get_GEOS_CHEM_summary_file ---> to generate final output file and plots
 % 3. run monthly_table = get_GEOS_CHEM_LUT() ---> create LUT
 
-% Xiaoyi --- 2018/11/05
+% Xiaoyi --- 2019/03/31
 
-year = '2014';
+start_date = '20150102';% this is the start date of files to be processed
+
 site = 'Downsview';
 %site = 'Egbert'
 %site = 'FortMcKay';
@@ -40,13 +41,13 @@ if ispc
     general_data_file_path = ['C:\Projects\GEOS_CHEM\data\MERRA2_05x0625_47L_NA_V12\'];%MERRA2_05x0625_47L_NA_V12 %GEOSFP_2x25_47L_V12
     output_file_path = 'C:\Projects\GEOS_CHEM\output\temp\MERRA2_05x0625_47L_NA_V12\';
     mkdir(output_file_path);
-else
+else    
     %general_data_file_path = ['/net/aurora/model_datasets/geoschem/2x25/' year '/'];% data path on Aurora
-    %general_data_file_path = ['/net/aurora/model_datasets/geoschem/GEOSFP_2x25_47L_V12/'];
-    general_data_file_path = ['/net/aurora/model_datasets/geoschem/MERRA2_05x0625_47L_NA_V12/'];
+    general_data_file_path = ['/net/aurora/model_datasets/geoschem/MERRA2_05x0625_47L_NA_V12/'];%GEOSFP_2x25_47L_V12
     %month_list = ls(general_data_file_path);% this only works for Windows! 
     %month_list = dir(general_data_file_path);% this works for both Windows and UNIX! 
-    output_file_path = '/export/data/home/xizhao/GEOS_CHEM/output/temp/';
+    output_file_path = '/export/data/home/xizhao/GEOS_CHEM/output/temp/MERRA2_05x0625_47L_NA_V12/';
+    
     mkdir(output_file_path);
 end
 
@@ -63,15 +64,21 @@ end
 % get list of files in that month
 %list = ls(data_file_path);% this only works for Windows! 
 list = dir(data_file_path);% this works for both Windows and UNIX! 
+list(1:2) = [];% remove the first two empty entries
+filenames = cell2mat({list.name}');% get all file names into mat char
+filedates = filenames(:,numel('GEOSChem.SpeciesConc.')+1:end - numel('_0000z.nc4'));% convert file names to strings
+tf_process = datetime(filedates,'InputFormat','yyyyMMdd') >= datetime(start_date,'InputFormat','yyyyMMdd');% get tf for processing
+list = list(tf_process);% update file list that will be processed
+
 N = size(list);
-for i_file = 3:N(1)
+for i_file = 1:N(1)
     %filename = list(i_file,:);% this only works for Windows! 
     filename = list(i_file).name;% this works for both Windows and UNIX! 
-    p_finished = ((i_file-2)/N(1))*100;
+    p_finished = ((i_file)/N(1))*100;
     disp(['Extracting file: ' filename ' @' site '  --' num2str(p_finished) '%-- ']);
     f_nm = [data_file_path filename];
 
-    if i_file == 3
+    if i_file == 1
         LON = ncread(f_nm,'lon');
         LAT = ncread(f_nm,'lat');
         % find the index of the profiles at given location

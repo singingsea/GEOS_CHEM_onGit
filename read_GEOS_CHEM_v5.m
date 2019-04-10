@@ -36,7 +36,7 @@ PBL_M = ncread(metfile,'Met_PBLH');% PBL m
 PBL_L = ncread(metfile,'Met_PBLTOPL');%PBL level
 
 % read in trace gas 
-NO2 = ncread(f_nm,'SpeciesConc_NO2');% vmr original ratio, not ppb!
+NO2 = ncread(f_nm,'SpeciesConc_NO2');% vmr original ratio mol/mol, not ppb!
 O3 = ncread(f_nm,'SpeciesConc_O3');
 HCHO = ncread(f_nm,'SpeciesConc_CH2O');
 SO2 = ncread(f_nm,'SpeciesConc_SO2');
@@ -60,11 +60,11 @@ for i_hour = 1:24
     i = user_lat_index;% the index of Lat will be used
     j = user_lon_index;% the index of Lon will be used
     % get the profile over the site
-    O3_a = O3(j,i,:,i_hour);% O3 VMR in [ppbv] ---> the dim of each trace gas is [lon,lat,lev,hour]
-    NO2_a = NO2(j,i,:,i_hour);% NO2 VMR in [ppbv]
-    NO_a = NO(j,i,:,i_hour);% NO VMR in [ppbv]
-    SO2_a = SO2(j,i,:,i_hour);% SO2 VMR in [ppbv]
-    HCHO_a = HCHO(j,i,:,i_hour);% HCHO VMR in [ppbv]
+    O3_a = O3(j,i,:,i_hour);% O3 VMR in [mol/mol] ---> the dim of each trace gas is [lon,lat,lev,hour]
+    NO2_a = NO2(j,i,:,i_hour);% NO2 VMR in [mol/mol]
+    NO_a = NO(j,i,:,i_hour);% NO VMR in [mol/mol]
+    SO2_a = SO2(j,i,:,i_hour);% SO2 VMR in [mol/mol]
+    HCHO_a = HCHO(j,i,:,i_hour);% HCHO VMR in [mol/mol]
 
     AIRDEN_a = AIRDEN(j,i,:,i_hour);% air density  [molec/m3] 
     BXHEIGHT_a = BXHEIGHT(j,i,:,i_hour);% box height m

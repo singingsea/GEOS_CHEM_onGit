@@ -1,5 +1,6 @@
 function monthly_table = get_GEOS_CHEM_LUT()
 DU = 2.6870e+16;
+use_total_column = true; % if true, then use total column to calculate conversion ratio
 % calculate LUT from GEOS-CHEM summary file
 use_time_window = true;
 start_time = '2015-01-01';
@@ -16,11 +17,19 @@ save_fig = 1;
 if ispc
     addpath('C:\Users\ZhaoX\Documents\MATLAB\matlab\');
     summary_file_output_file_path = 'C:\Projects\GEOS_CHEM\output\summary_files\';
-    plot_path = [summary_file_output_file_path site '_LUT\'];
+    if use_total_column
+        plot_path = [summary_file_output_file_path site '_LUT_totalcolumn\'];  
+    else
+        plot_path = [summary_file_output_file_path site '_LUT\'];
+    end
 else
     addpath('/export/data/home/xizhao/matlab/');
     summary_file_output_file_path = '/export/data/home/xizhao/GEOS_CHEM/output/summary_files/';
-    plot_path = [summary_file_output_file_path site '_LUT/'];
+    if use_total_column
+        plot_path = [summary_file_output_file_path site '_LUT_totalcolumn/'];  
+    else
+        plot_path = [summary_file_output_file_path site '_LUT/'];
+    end
 end
 mkdir(plot_path);
 matfile_nm = [summary_file_output_file_path 'VCDs_Profile_' site '.mat'];
@@ -37,7 +46,11 @@ end
 
 monthly_table = table;
 j=1;
-VCDs.ratio = VCDs.no2_surf./VCDs.no2_pbl;
+if use_total_column
+    VCDs.ratio = VCDs.no2_surf./VCDs.no2;
+else
+    VCDs.ratio = VCDs.no2_surf./VCDs.no2_pbl;
+end
 VCDs.doy = day(VCDs.UTC,'dayofyear');
 
 for month = 1:12
@@ -72,7 +85,7 @@ for month = 1:12
     x = monthly_table.hour(TF,:);
     y = monthly_table.ratio(TF,:);
     b = monthly_table.ratio_std(TF,:);
-    plot(x,y,'.-','Color',C(month,:));
+    plot(x,y.*DU,'.-','Color',C(month,:));
     %[hl, hp] = boundedline(x, y, b,  'transparency', 0.5);
 end
 xlim([0 23]);
@@ -101,11 +114,15 @@ for month = 1:12
  
     b = monthly_table.ratio_err(TF,:);
     %plot(x,y_LST,'.-','Color',C(month,:));
-    [hl, hp] = boundedline(x, y_LST, b, 'cmap', C(month,:), 'alpha');
+    [hl, hp] = boundedline(x, y_LST.*DU, b.*DU, 'cmap', C(month,:), 'alpha');
 end
 xlim([0 23]);
 ylabel('Convertion ratio [ppbv/DU]');
 xlabel('LST [Hour]');
 print_setting(1/4,save_fig,[plot_path fig_name]);
 
-save([plot_path 'LUT.mat'],'monthly_table');
+if use_total_column
+    save([plot_path 'LUT_totalcolumn.mat'],'monthly_table');
+else
+    save([plot_path 'LUT.mat'],'monthly_table');
+end
