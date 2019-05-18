@@ -1,6 +1,6 @@
 function monthly_table = get_GEOS_CHEM_LUT()
 DU = 2.6870e+16;
-use_total_column = true; % if true, then use total column to calculate conversion ratio
+use_total_column = false; % if true, then use total column to calculate conversion ratio
 % calculate LUT from GEOS-CHEM summary file
 use_time_window = true;
 start_time = '2015-01-01';
@@ -16,11 +16,12 @@ save_fig = 1;
 
 if ispc
     addpath('C:\Users\ZhaoX\Documents\MATLAB\matlab\');
-    summary_file_output_file_path = 'C:\Projects\GEOS_CHEM\output\summary_files\';
+    %summary_file_output_file_path = 'C:\Projects\GEOS_CHEM\output\summary_files\';
+    summary_file_output_file_path = 'C:\Projects\GEOS_CHEM\output\summary_files\MERRA2_05x0625_47L_NA_V12\';
     if use_total_column
-        plot_path = [summary_file_output_file_path site '_LUT_totalcolumn\'];  
+        plot_path = [summary_file_output_file_path site '_LUT_totalcolumn\MERRA2_05x0625_47L_NA_V12\'];  
     else
-        plot_path = [summary_file_output_file_path site '_LUT\'];
+        plot_path = [summary_file_output_file_path site '_LUT\MERRA2_05x0625_47L_NA_V12\'];
     end
 else
     addpath('/export/data/home/xizhao/matlab/');
@@ -44,6 +45,7 @@ end
 
 %%
 
+VCDs.LST = VCDs.UTC + hours(timezone_offset);% get LST
 monthly_table = table;
 j=1;
 if use_total_column
@@ -65,6 +67,7 @@ for month = 1:12
         
         monthly_table.month(j,:) = month;
         monthly_table.hour(j,:) = hour;
+        monthly_table.hour_LST(j,:) = unique(data.LST.Hour);
         monthly_table.ratio(j,:) = mean(data.ratio./DU);
         monthly_table.ratio_std(j,:) = std(data.ratio./DU);
         N = height(data);
@@ -115,6 +118,7 @@ for month = 1:12
     b = monthly_table.ratio_err(TF,:);
     %plot(x,y_LST,'.-','Color',C(month,:));
     [hl, hp] = boundedline(x, y_LST.*DU, b.*DU, 'cmap', C(month,:), 'alpha');
+    %[hl, hp] = boundedline(monthly_table.hour_LST(TF,:), y.*DU, b.*DU,'cmap', C(month,:), 'alpha');% this is to test if the LST convertion is correct
 end
 xlim([0 23]);
 ylabel('Convertion ratio [ppbv/DU]');
